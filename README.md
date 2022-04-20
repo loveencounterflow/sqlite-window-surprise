@@ -14,7 +14,10 @@
 # SQLite Window Surprise
 
 * tested with `sqlite3 -version` `3.31.1 2020-01-27 19:55:54
-  3bfa9cc97da10598521b342961df8f5f68c7388fa117345eeb516eaa837balt1`
+  3bfa9cc97da10598521b342961df8f5f68c7388fa117345eeb516eaa837balt1` (current version on Linux Mint 20.3)
+* tested with current
+  [https://sqlite.org/2022/sqlite-autoconf-3380200.tar.gz](https://sqlite.org/2022/sqlite-autoconf-3380200.tar.gz),
+  compiled on Linux Mint 20.3 using `./configure && make`
 
 ## Description
 
