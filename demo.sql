@@ -140,6 +140,57 @@ select distinct
   window w as ( partition by n order by i range between unbounded preceding and unbounded following );
 
 
+-- use several window defs
+-- use other aggregate functions such as sum()
+
+
+.print ''
+.print '------------------------------------------------------------------------------------------------------------'
+.print 'Using a separate but identical window definition for each aggregate does not affect outcomes:'
+.print ''
+
+select distinct
+    n                                                           as n,
+    json_group_array( json_array( i, v ) )              over w1 as "json_group_array() nested",
+    group_concat( '(' || i || ',' || v || ')', ', ' )   over w2 as "group_concat()",
+    json_group_array( v )                               over w3 as "json_group_array() flat",
+    json_group_object( i, v )                           over w4 as "json_group_object()"
+  from d
+  window w1 as ( partition by n order by i range between unbounded preceding and unbounded following ),
+         w2 as ( partition by n order by i range between unbounded preceding and unbounded following ),
+         w3 as ( partition by n order by i range between unbounded preceding and unbounded following ),
+         w4 as ( partition by n order by i range between unbounded preceding and unbounded following );
+
+.print ''
+.print '------------------------------------------------------------------------------------------------------------'
+.print 'aggregate function `sum()` is not affected; results show unambiguously that summing is indeed done over the'
+.print 'values shown in the `group_concat()` lists, even in the midst of other aggregators:'
+.print ''
+
+select distinct
+    n                                                           as n,
+    group_concat( i )                                   over w  as "group_concat( i )",
+    group_concat( v )                                   over w  as "group_concat( v )",
+    sum( i )                                            over w  as "sum( i )",
+    sum( v )                                            over w  as "sum( v )",
+    json_group_array( i )                               over w  as "json_group_array( i )"
+  from d
+  window w as ( partition by n order by i range between unbounded preceding and unbounded following );
+
+.print ''
+.print '------------------------------------------------------------------------------------------------------------'
+.print '`json_group_array()` also fails when not coming last when combined with `sum()`; observe the discrepancies'
+.print 'between numbers listed and numbers summed:'
+.print ''
+
+select distinct
+    n                                                           as n,
+    json_group_array( i )                               over w  as "json_group_array( i )",
+    sum( i )                                            over w  as "sum( i )",
+    json_group_array( v )                               over w  as "json_group_array( v )",
+    sum( v )                                            over w  as "sum( v )"
+  from d
+  window w as ( partition by n order by i range between unbounded preceding and unbounded following );
 
 
 
