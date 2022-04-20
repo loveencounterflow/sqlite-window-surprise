@@ -2,7 +2,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
-- [SQLite Window Surprise](#sqlite-window-surprise)
+- [Some Surprising Results from SQLite Aggregate Functions](#some-surprising-results-from-sqlite-aggregate-functions)
   - [Description](#description)
   - [Result](#result)
   - [Comparsion with Behavior of PostgreSQL (v14)](#comparsion-with-behavior-of-postgresql-v14)
@@ -14,7 +14,7 @@
 
 
 
-# SQLite Window Surprise
+# Some Surprising Results from SQLite Aggregate Functions
 
 * tested with `sqlite3 -version` `3.31.1 2020-01-27 19:55:54
   3bfa9cc97da10598521b342961df8f5f68c7388fa117345eeb516eaa837balt1` (current version on Linux Mint 20.3)
