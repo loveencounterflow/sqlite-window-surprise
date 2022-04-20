@@ -10,8 +10,9 @@ create table d (
 
 .print ''
 .print '------------------------------------------------------------------------------------------------------------'
-.print 'current table contents'
+.print 'Current table contents'
 .print ''
+.print '```'
 
 insert into d ( n, i, v ) values
   ( 'a', 1, 11 ),
@@ -26,10 +27,12 @@ insert into d ( n, i, v ) values
 
 select * from d order by n, i;
 
+.print '```'
 .print ''
 .print '------------------------------------------------------------------------------------------------------------'
-.print 'several ways to aggregate values with `*group*()` functions, all of them working as expected:'
+.print 'Several ways to aggregate values with `*group*()` functions, all of them working as expected:'
 .print ''
+.print '```'
 
 select distinct
     n                                                           as n,
@@ -55,11 +58,13 @@ select distinct
   from d
   window w as ( partition by n order by i range between unbounded preceding and unbounded following );
 
+.print '```'
 .print ''
 .print '------------------------------------------------------------------------------------------------------------'
-.print 'using several aggregate functions in the same table using the same window definition all fail, with the'
+.print 'Using several aggregate functions in the same table using the same window definition all fail, with the'
 .print 'exception of the *last* aggregate and `group_concat()`, which do work as expected:'
 .print ''
+.print '```'
 
 select distinct
     n                                                           as n,
@@ -97,10 +102,12 @@ select distinct
   from d
   window w as ( partition by n order by i range between unbounded preceding and unbounded following );
 
+.print '```'
 .print ''
 .print '------------------------------------------------------------------------------------------------------------'
 .print '`group_concat()` works even with unquoted values, even in the midst of other aggregators:'
 .print ''
+.print '```'
 
 select distinct
     n                                                           as n,
@@ -113,10 +120,12 @@ select distinct
   from d
   window w as ( partition by n order by i range between unbounded preceding and unbounded following );
 
+.print '```'
 .print ''
 .print '------------------------------------------------------------------------------------------------------------'
-.print 'using `json_group_array()` fails where not last in a series of aggregations:'
+.print 'Using `json_group_array()` fails where not last in a series of aggregations:'
 .print ''
+.print '```'
 
 select distinct
     n                                                           as n,
@@ -126,10 +135,12 @@ select distinct
   from d
   window w as ( partition by n order by i range between unbounded preceding and unbounded following );
 
+.print '```'
 .print ''
 .print '------------------------------------------------------------------------------------------------------------'
-.print 'turning values into strings does not affect outcomes:'
+.print 'Turning values into strings does not affect outcomes:'
 .print ''
+.print '```'
 
 select distinct
     n                                                           as n,
@@ -139,15 +150,12 @@ select distinct
   from d
   window w as ( partition by n order by i range between unbounded preceding and unbounded following );
 
-
--- use several window defs
--- use other aggregate functions such as sum()
-
-
+.print '```'
 .print ''
 .print '------------------------------------------------------------------------------------------------------------'
 .print 'Using a separate but identical window definition for each aggregate does not affect outcomes:'
 .print ''
+.print '```'
 
 select distinct
     n                                                           as n,
@@ -161,11 +169,13 @@ select distinct
          w3 as ( partition by n order by i range between unbounded preceding and unbounded following ),
          w4 as ( partition by n order by i range between unbounded preceding and unbounded following );
 
+.print '```'
 .print ''
 .print '------------------------------------------------------------------------------------------------------------'
-.print 'aggregate function `sum()` is not affected; results show unambiguously that summing is indeed done over the'
+.print 'Aggregate function `sum()` is not affected; results show unambiguously that summing is indeed done over the'
 .print 'values shown in the `group_concat()` lists, even in the midst of other aggregators:'
 .print ''
+.print '```'
 
 select distinct
     n                                                           as n,
@@ -177,11 +187,13 @@ select distinct
   from d
   window w as ( partition by n order by i range between unbounded preceding and unbounded following );
 
+.print '```'
 .print ''
 .print '------------------------------------------------------------------------------------------------------------'
 .print '`json_group_array()` also fails when not coming last when combined with `sum()`; observe the discrepancies'
 .print 'between numbers listed and numbers summed:'
 .print ''
+.print '```'
 
 select distinct
     n                                                           as n,
@@ -192,5 +204,6 @@ select distinct
   from d
   window w as ( partition by n order by i range between unbounded preceding and unbounded following );
 
+.print '```'
 
 
