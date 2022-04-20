@@ -120,16 +120,6 @@ select distinct
   from d
   window w as ( partition by n order by i range between unbounded preceding and unbounded following );
 
-select distinct
-    n                                                           as n,
-    json_group_array( json_array( i, v ) )              over () as "json_group_array() nested",
-    group_concat( '(' || i || ',' || v || ')', ', ' )   over () as "group_concat()",
-    group_concat( i )                                   over () as "group_concat( i )",
-    group_concat( v )                                   over () as "group_concat( v )",
-    json_group_array( v )                               over () as "json_group_array() flat",
-    json_group_object( i, v )                           over () as "json_group_object()"
-  from d;
-
 .print '```'
 .print ''
 .print '------------------------------------------------------------------------------------------------------------'
