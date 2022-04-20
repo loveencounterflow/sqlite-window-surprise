@@ -6,7 +6,6 @@
   - [Description](#description)
   - [Result](#result)
   - [Comparsion with Behavior of PostgreSQL (v14)](#comparsion-with-behavior-of-postgresql-v14)
-  - [Comment](#comment)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -25,14 +24,21 @@
 
 ## Description
 
-* https://www.sqlite.org/lang_aggfunc.html#group_concat
+* SQLite has a number of aggregate functions such as `sum()`, `group_concat()`, `json_array()` and so on;
+* these are typically used in conjunction with a window definition
 
-> * group_concat(X)
-> * group_concat(X,Y)
->
-> The group_concat() function returns a string which is the concatenation of all non-NULL values of X. If
-> parameter Y is present then it is used as the separator between instances of X. A comma (",") is used as
-> the separator if Y is omitted. The order of the concatenated elements is arbitrary.
+```sql
+select distinct
+    n                                                           as n,
+    json_group_array( json_array( i, v ) )              over w  as "json_group_array() nested",
+    group_concat( '(' || i || ',' || v || ')', ', ' )   over w  as "group_concat()",
+    group_concat( i )                                   over w  as "group_concat( i )",
+    group_concat( v )                                   over w  as "group_concat( v )",
+    json_group_array( v )                               over w  as "json_group_array() flat",
+    json_group_object( i, v )                           over w  as "json_group_object()"
+  from d
+  window w as ( partition by n order by i range between unbounded preceding and unbounded following );
+```
 
 ## Result
 
@@ -69,5 +75,3 @@ works as expected:
  c | [1, 2, 3, 4]   | [13, 23, 33, 43] | {"1": 13, "2": 23, "3": 33, "4": 43} | {1,2,3,4}      | {13,23,33,43}
 ```
 
-
-## Comment
