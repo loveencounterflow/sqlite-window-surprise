@@ -36,7 +36,7 @@
 
 ## Result
 
-The output of running `./sqlite3 < demo.sql > sqlite-output.md` can be seen [here](./sqlite-output.md).
+[The output of running `./sqlite3 < demo.sql > sqlite-output.md` can be seen here](./sqlite-output.md).
 
 ## Comparsion with Behavior of PostgreSQL (v14)
 
