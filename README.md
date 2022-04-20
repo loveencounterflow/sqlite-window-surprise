@@ -64,7 +64,7 @@ insert into d ( n, i, v ) values
 
 ### Sample Query
 
-The queries in [`demo.sql`](https://github.com/loveencounterflow/sqlite-window-surprise/demo.sql) are all variations of a common theme; here is one of them:
+The queries in [`demo.sql`](https://github.com/loveencounterflow/sqlite-window-surprise/blob/main/demo.sql) are all variations of a common theme; here is one of them:
 
 ```sql
 select distinct
@@ -100,12 +100,12 @@ function over a window that is defined with `partition by n` and `order by i`.
 
 **However, results in the other columns always repeat the same value**. This can't be right.
 
-The queries in [`demo.sql`](https://github.com/loveencounterflow/sqlite-window-surprise/demo.sql) move things around so one can get a feeling for what triggers this
+The queries in [`demo.sql`](https://github.com/loveencounterflow/sqlite-window-surprise/blob/main/demo.sql) move things around so one can get a feeling for what triggers this
 strange behavior.
 
 ## Result
 
-[The output of running `./sqlite3 < demo.sql > sqlite-output.md` can be seen here](https://github.com/loveencounterflow/sqlite-window-surprise/sqlite-output.md).
+[The output of running `./sqlite3 < demo.sql > sqlite-output.md` can be seen here](https://github.com/loveencounterflow/sqlite-window-surprise/blob/main/sqlite-output.md).
 
 Perusing these results, it becomes clear that **when an aggregate JSON function is used together with
 (an)other aggregate function(s), the results of the JSON function will depend on its position within the
