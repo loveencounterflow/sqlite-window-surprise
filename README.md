@@ -5,6 +5,7 @@
 - [SQLite Window Surprise](#sqlite-window-surprise)
   - [Description](#description)
   - [Result](#result)
+  - [Comparsion with Behavior of PostgreSQL (v14)](#comparsion-with-behavior-of-postgresql-v14)
   - [Comment](#comment)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -35,56 +36,38 @@
 
 ## Result
 
+The output of running `./sqlite3 < demo.sql > sqlite-output.md` can be seen [here](./sqlite-output.md).
+
+## Comparsion with Behavior of PostgreSQL (v14)
+
+```bash
+psql -f demo-postgresql-14.sql # may want to add user, db, host as the case may be
 ```
-./sqlite3 < demo.sql                                                                                                                                                              ok  at 11:09:37
-┌───┬───┬────┐
-│ n │ i │ v  │
-├───┼───┼────┤
-│ a │ 1 │ 11 │
-│ a │ 2 │ 21 │
-│ a │ 3 │ 31 │
-│ b │ 1 │ 12 │
-│ b │ 2 │ 22 │
-│ c │ 1 │ 13 │
-│ c │ 2 │ 23 │
-│ c │ 3 │ 33 │
-│ c │ 4 │ 43 │
-└───┴───┴────┘
-┌───┬───────────────────────────────┐
-│ n │   json_group_array() nested   │
-├───┼───────────────────────────────┤
-│ a │ [[1,11],[2,21],[3,31]]        │
-│ b │ [[1,12],[2,22]]               │
-│ c │ [[1,13],[2,23],[3,33],[4,43]] │
-└───┴───────────────────────────────┘
-┌───┬───────────────────────────────┐
-│ n │      json_group_object()      │
-├───┼───────────────────────────────┤
-│ a │ {"1":11,"2":21,"3":31}        │
-│ b │ {"1":12,"2":22}               │
-│ c │ {"1":13,"2":23,"3":33,"4":43} │
-└───┴───────────────────────────────┘
-┌───┬─────────────────────────┐
-│ n │ json_group_array() flat │
-├───┼─────────────────────────┤
-│ a │ [11,21,31]              │
-│ b │ [12,22]                 │
-│ c │ [13,23,33,43]           │
-└───┴─────────────────────────┘
-┌───┬────────────────────────────────┐
-│ n │         group_concat()         │
-├───┼────────────────────────────────┤
-│ a │ (1,11), (2,21), (3,31)         │
-│ b │ (1,12), (2,22)                 │
-│ c │ (1,13), (2,23), (3,33), (4,43) │
-└───┴────────────────────────────────┘
-┌───┬───────────────────────────────┬───────────────────────────────┬─────────────────────────┬────────────────────────────────┐
-│ n │   json_group_array() nested   │      json_group_object()      │ json_group_array() flat │         group_concat()         │
-├───┼───────────────────────────────┼───────────────────────────────┼─────────────────────────┼────────────────────────────────┤
-│ a │ [[1,11],[1,11],[1,11]]        │ {"1":11,"1":11,"1":11}        │ [11,11,11]              │ (1,11), (2,21), (3,31)         │
-│ b │ [[1,12],[1,12]]               │ {"1":12,"1":12}               │ [12,12]                 │ (1,12), (2,22)                 │
-│ c │ [[1,13],[1,13],[1,13],[1,13]] │ {"1":13,"1":13,"1":13,"1":13} │ [13,13,13,13]           │ (1,13), (2,23), (3,33), (4,43) │
-└───┴───────────────────────────────┴───────────────────────────────┴─────────────────────────┴────────────────────────────────┘
+
+PostgreSQL has aggregate functions that are very similar to those offered by SQLite; using the exact same
+table definition and `insert` statements, the following:
+
+```sql
+select distinct
+    n                                                           as n,
+    jsonb_agg( i )                                      over w  as "jsonb_agg( i )",
+    jsonb_agg( v )                                      over w  as "jsonb_agg( v )",
+    jsonb_object_agg( i, v )                            over w  as "jsonb_object_agg( i, v )",
+    array_agg( i )                                      over w  as "array_agg( i )",
+    array_agg( v )                                      over w  as "array_agg( v )"
+  from d
+  window w as ( partition by n order by i range between unbounded preceding and unbounded following );
 ```
+
+works as expected:
+
+```
+ n | jsonb_agg( i ) |  jsonb_agg( v )  |       jsonb_object_agg( i, v )       | array_agg( i ) | array_agg( v )
+---+----------------+------------------+--------------------------------------+----------------+----------------
+ a | [1, 2, 3]      | [11, 21, 31]     | {"1": 11, "2": 21, "3": 31}          | {1,2,3}        | {11,21,31}
+ b | [1, 2]         | [12, 22]         | {"1": 12, "2": 22}                   | {1,2}          | {12,22}
+ c | [1, 2, 3, 4]   | [13, 23, 33, 43] | {"1": 13, "2": 23, "3": 33, "4": 43} | {1,2,3,4}      | {13,23,33,43}
+```
+
 
 ## Comment
