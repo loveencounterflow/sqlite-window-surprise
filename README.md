@@ -4,6 +4,9 @@
 
 - [Some Surprising Results from SQLite Aggregate Functions](#some-surprising-results-from-sqlite-aggregate-functions)
   - [Description](#description)
+    - [Test Data](#test-data)
+    - [Sample Query](#sample-query)
+    - [The Surprise](#the-surprise)
   - [Result](#result)
   - [Comparsion with Behavior of PostgreSQL (v14)](#comparsion-with-behavior-of-postgresql-v14)
 
@@ -25,7 +28,43 @@
 ## Description
 
 * SQLite has a number of aggregate functions such as `sum()`, `group_concat()`, `json_array()` and so on;
-* these are typically used in conjunction with a window definition
+* these are typically used in conjunction with a window definition (`select ... agg() over w ... window w as
+  ()`)
+* or with an 'empty window' (`agg() over ()`)
+* one would expect aggregate functions to always work the same given
+  * a table definition,
+  * a set of data in that table,
+  * and a `select` statement with
+    * a given aggregate function,
+    * and a given window definition.
+* However, that does not seem to be the case.
+
+### Test Data
+
+Tests were run with the following table and data:
+
+```sql
+create table d (
+    n   text    not null,
+    i   integer not null,
+    v   integer not null,
+  primary key ( n, i ) );
+
+insert into d ( n, i, v ) values
+  ( 'a', 1, 11 ),
+  ( 'a', 2, 21 ),
+  ( 'a', 3, 31 ),
+  ( 'b', 1, 12 ),
+  ( 'b', 2, 22 ),
+  ( 'c', 1, 13 ),
+  ( 'c', 2, 23 ),
+  ( 'c', 3, 33 ),
+  ( 'c', 4, 43 );
+```
+
+### Sample Query
+
+The queries in [`demo.sql`](./demo.sql) are all variations of a common theme; here is one of them:
 
 ```sql
 select distinct
@@ -40,9 +79,42 @@ select distinct
   window w as ( partition by n order by i range between unbounded preceding and unbounded following );
 ```
 
+This is the result of the above query:
+
+```
+┌───┬───────────────────────────────┬────────────────────────────────┬───────────────────┬───────────────────┬─────────────────────────┬───────────────────────────────┐
+│ n │   json_group_array() nested   │         group_concat()         │ group_concat( i ) │ group_concat( v ) │ json_group_array() flat │      json_group_object()      │
+├───┼───────────────────────────────┼────────────────────────────────┼───────────────────┼───────────────────┼─────────────────────────┼───────────────────────────────┤
+│ a │ [[1,11],[1,11],[1,11]]        │ (1,11), (2,21), (3,31)         │ 1,2,3             │ 11,21,31          │ [11,11,11]              │ {"1":11,"2":21,"3":31}        │
+│ b │ [[1,12],[1,12]]               │ (1,12), (2,22)                 │ 1,2               │ 12,22             │ [12,12]                 │ {"1":12,"2":22}               │
+│ c │ [[1,13],[1,13],[1,13],[1,13]] │ (1,13), (2,23), (3,33), (4,43) │ 1,2,3,4           │ 13,23,33,43       │ [13,13,13,13]           │ {"1":13,"2":23,"3":33,"4":43} │
+└───┴───────────────────────────────┴────────────────────────────────┴───────────────────┴───────────────────┴─────────────────────────┴───────────────────────────────┘
+```
+
+### The Surprise
+
+When we look add columns `"group_concat()"`, `"group_concat( i )"`, `"group_concat( v )"` and
+`"json_group_object()"` in the above listing, we are seeing consecutive indexes (field `i`) `1,2,3` in
+parallel with consecutive values (field `v`) `11,21,31`. This is the espected output of an aggregate
+function over a window that is defined with `partition by n` and `order by i`.
+
+**However, results in the other columns always repeat the same value**. This can't be right.
+
+The queries in [`demo.sql`](./demo.sql) move things around so one can get a feeling for what triggers this
+strange behavior.
+
 ## Result
 
 [The output of running `./sqlite3 < demo.sql > sqlite-output.md` can be seen here](./sqlite-output.md).
+
+Perusing these results, it becomes clear that **when an aggregate JSON function is used together with
+(an)other aggregate function(s), the results of the JSON function will depend on its position within the
+query**. Specifically, an aggregate JSON function will only work when it comes as the *last* aggregate
+function in that query.
+
+> *Caveat:* not all possible combinations have been tried, so this statement my have to be modified in the
+> future.
+
 
 ## Comparsion with Behavior of PostgreSQL (v14)
 
